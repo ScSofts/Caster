@@ -5,8 +5,7 @@
 
 namespace  {
     thread_local asmjit::JitRuntime *jrt;
-
-    std::unordered_map<void*,asmjit::CodeHolder*> function_map;
+    thread_local std::unordered_map<void*,asmjit::CodeHolder*> function_map;
 };
 
 extern "C"{

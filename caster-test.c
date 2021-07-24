@@ -1,26 +1,39 @@
 #include <stdio.h>
+#include <malloc.h>
 #include "caster.h"
 
-DECLARE_MEMBER_TYPE(void, io_print,int);
-struct _io{
-    const char *buf;
-    io_print printBuf;
-};
+struct _io;
 STRUCT_ALIAS(_io, IO);
+DECLARE_MEMBER_TYPE(IO *, io_p,void);
 
-DEFINE_MEMBER_FUNC(void,_io_printBuf,IO* io,int i){
-    printf("&(io->buf)=%p\n", io->buf);
-    printf("io->buf=%s\n", io->buf);
-    printf("i=%d,j=%d\n",i, 5);
-    io->buf = NULL;
+struct _io{
+    io_p p1;
+    io_p p2;
+    int i1;
+    int i2;
+};
+
+DEFINE_MEMBER_FUNC(IO*,_io_p1,IO* const this){
+    printf("1 + %d\n", this->i1);
+    return this;
+}
+
+DEFINE_MEMBER_FUNC(IO* ,_io_p2,IO* const this){
+    printf("2 + %d\n", this->i2);
+    return this;
 }
 
 void io_constructor(IO* io){
-    io->printBuf = (io_print)bind_function((void*)_io_printBuf, (void*)io);
+    io->p1 = (io_p)bind_function((void*)_io_p1, (void*)io);
+    io->p2 = (io_p)bind_function((void*)_io_p2, (void*)io);
+    io->i1 = 123;
+    io->i2 = 456;
 }
 
 void io_destructor(IO* io){
-    free_function(io->printBuf);
+    free_function(io->p1);
+    free_function(io->p2);
+    free(io);
     printf("destructor called!");
 }
 
@@ -28,13 +41,16 @@ void io_destructor(IO* io){
 int main(){
     init();
 
-    AUTO_DESTRUCT(io_destructor) IO io;
+    IO *io = (IO*)malloc(sizeof(IO));
+    io_constructor(io);
 
-    io_constructor(&io);
-    // printf("%p",io.printBuf);
-    io.buf = "Hello World!";
-    io.printBuf(4);
+    io
+    ->p1()
+    ->p2()
+    ->p2()
+    ->p1()
+    ->p2();
 
-    printf("&(io->buf)=%p\n", io.buf);
+    io_destructor(io);
     return 0;
 }
